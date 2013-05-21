@@ -17,10 +17,10 @@ module XeroGateway
       end
     end
 
-  
+    # Should add other fields based on Pivotal: 49575441
     def to_xml(b = Builder::XmlMarkup.new)
       b.User {
-        b.UserID self.user)id if self.user_id
+        b.UserID self.user_id if self.user_id
         b.FirstName self.first_name if self.first_name
         
       }
