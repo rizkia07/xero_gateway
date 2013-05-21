@@ -185,6 +185,18 @@ module XeroGateway
       response
     end
 
+    # Retrieves users from Xero
+    # Initial code
+    def get_users(options = {})
+      request_params = {}
+
+      request_params[:EmployeeID]    = options[:employee_id] if options[:employee_id]
+      
+      response_xml = http_get(@client, "#{@xero_url}/Users", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/users'})
+    end
+
     # Retrieves all invoices from Xero
     #
     # Usage : get_invoices
