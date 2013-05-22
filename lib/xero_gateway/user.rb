@@ -17,7 +17,6 @@ module XeroGateway
       end
     end
 
-    # Should add other fields based on Pivotal: 49575441
     def to_xml(b = Builder::XmlMarkup.new)
       b.User {
         b.UserID self.user_id if self.user_id
@@ -26,12 +25,15 @@ module XeroGateway
       }
     end
     
+    # Should add other fields based on Pivotal: 49575441
     def self.from_xml(user_element)
       user = User.new
       user_element.children.each do |element|
         case(element.name)
           when "UserID" then user.user_id = element.text
           when "FirstName" then user.first_name = element.text
+          when "Employees" then element.children.each {|employee_element| user.employees << Employee.from_xml_to_user(employee_element)}
+
         end
       end
       employee

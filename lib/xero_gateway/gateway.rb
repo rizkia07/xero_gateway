@@ -797,6 +797,7 @@ module XeroGateway
           when "Currencies" then element.children.each {|child| response.response_item << Currency.from_xml(child) }
           when "Organisations" then response.response_item = Organisation.from_xml(element.children.first) # Xero only returns the Authorized Organisation
           when "TrackingCategories" then element.children.each {|child| response.response_item << TrackingCategory.from_xml(child) }
+          when "Users" then element.children.each {|child| response.response_item << User.from_xml(child) }
           when "Errors" then response.errors = element.children.map { |error| Error.parse(error) }
         end
       end if response_element
