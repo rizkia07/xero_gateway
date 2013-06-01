@@ -16,7 +16,9 @@ module XeroGateway::Payroll
     attr_reader :errors
 
     attr_accessor :employee_id, :first_name, :date_of_birth, :email, :first_name, :gender, :last_name,
-                  :middle_name, :tax_file_number, :title
+                  :middle_name, :tax_file_number, :title,
+                  # Adding HomeAddress fields/elements
+                  :home_address
 
     def initialize(params = {})
       @errors ||= []
@@ -25,6 +27,8 @@ module XeroGateway::Payroll
       params.each do |k,v|
         self.send("#{k}=", v)
       end
+
+      @home_address ||= []
     end
 
 
@@ -58,7 +62,7 @@ module XeroGateway::Payroll
         b.LastName self.last_name if self.last_name
         b.MiddleNames self.middle_name if self.middle_name
         b.TaxFileNumber self.tax_file_number if self.tax_file_number
-        b.Title self.title if self.title
+        b.Title self.title if self.title             
       }
     end
     
@@ -76,13 +80,14 @@ module XeroGateway::Payroll
           when "MiddleNames" then employee.middle_name = element.text
           when "TaxFileNumber" then employee.tax_file_number = element.text
           when "Title" then employee.title = element.text
+          when "HomeAddress" then element.children.each {|home_address_element| employee.home_address << Address.from_xml(home_address_element)}
         end
       end
       employee
     end
 
     def ==(other)
-      [ :employee_id, :first_name, :date_of_birth, :email, :first_name, :gender, :last_name, :middle_name, :tax_file_number, :title ].each do |field|
+      [ :employee_id, :first_name, :date_of_birth, :email, :first_name, :gender, :last_name, :middle_name, :tax_file_number, :title, :home_address ].each do |field|
         return false if send(field) != other.send(field)
       end
       return true
