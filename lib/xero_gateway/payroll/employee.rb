@@ -31,6 +31,21 @@ module XeroGateway::Payroll
       @home_address ||= []
     end
 
+    # Helper method to add a new address object to this employee.
+    #
+    # Usage:
+    #  employee.add_home_address({
+    #    :address_type =>   'STREET',
+    #    :line_1 =>         '100 Queen Street',
+    #    :city =>           'Brisbane',
+    #    :region =>         'QLD',
+    #    :post_code =>      '4000',
+    #    :country =>        'Australia'
+    #  })
+    def add_home_address(address_params)
+      self.home_address << Address.new(address_params)
+    end
+
 
     # Validate the Employee record according to what will be valid by the gateway.
     #
@@ -85,7 +100,10 @@ module XeroGateway::Payroll
         b.LastName self.last_name if self.last_name
         b.MiddleNames self.middle_name if self.middle_name
         b.TaxFileNumber self.tax_file_number if self.tax_file_number
-        b.Title self.title if self.title             
+        b.Title self.title if self.title          
+        b.HomeAddress {
+          home_address.each { |home_address| home_address.to_xml(b) }
+        } if self.home_address.any?   
       }
     end
     
