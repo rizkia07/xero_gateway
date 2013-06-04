@@ -28,24 +28,16 @@ module XeroGateway::Payroll
         self.send("#{k}=", v)
       end
 
-      @home_address ||= []
+      # @home_address ||= {}
     end
 
-    # Helper method to add a new address object to this employee.
-    #
-    # Usage:
-    #  employee.add_home_address({
-    #    :address_type =>   'STREET',
-    #    :line_1 =>         '100 Queen Street',
-    #    :city =>           'Brisbane',
-    #    :region =>         'QLD',
-    #    :post_code =>      '4000',
-    #    :country =>        'Australia'
-    #  })
-    def add_home_address(address_params)
-      self.home_address << Address.new(address_params)
+    def build_home_address(params = {})
+      self.home_address = gateway ? gateway.build_payroll_employee_address(params) : Address.new(params)
     end
-
+    
+    def home_address
+      @home_address ||= build_home_address
+    end
 
     # Validate the Employee record according to what will be valid by the gateway.
     #
@@ -100,10 +92,8 @@ module XeroGateway::Payroll
         b.LastName self.last_name if self.last_name
         b.MiddleNames self.middle_name if self.middle_name
         b.TaxFileNumber self.tax_file_number if self.tax_file_number
-        b.Title self.title if self.title          
-        b.HomeAddress {
-          home_address.each { |home_address| home_address.to_xml(b) }
-        } if self.home_address.any?   
+        b.Title self.title if self.title
+        home_address.to_xml(b)
       }
     end
     
@@ -121,7 +111,7 @@ module XeroGateway::Payroll
           when "MiddleNames" then employee.middle_name = element.text
           when "TaxFileNumber" then employee.tax_file_number = element.text
           when "Title" then employee.title = element.text
-          when "HomeAddress" then element.children.each {|home_address_element| employee.home_address << Address.from_xml(home_address_element)}
+          when "HomeAddress" then employee.home_address = Address.from_xml(element)
         end
       end
       employee
