@@ -1,6 +1,6 @@
 module XeroGateway::Payroll
   class Employee
-    # include Dates
+    include XeroGateway::Dates
 
     GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/ unless defined?(GUID_REGEX)
 
@@ -15,10 +15,9 @@ module XeroGateway::Payroll
     # Any errors that occurred when the #valid? method called.
     attr_reader :errors
 
-    attr_accessor :employee_id, :first_name, :date_of_birth, :email, :first_name, :gender, :last_name,
-                  :middle_name, :tax_file_number, :title,
-                  # Adding HomeAddress fields/elements
-                  :home_address
+    attr_accessor :employee_id, :first_name, :date_of_birth, :email, :gender, :last_name,
+                  :middle_name, :tax_file_number, :title, :start_date, :occupation, :mobile, 
+                  :phone, :termination_date, :home_address, :bank_accounts, :super_memberships, :pay_template
 
     def initialize(params = {})
       @errors ||= []
@@ -27,24 +26,27 @@ module XeroGateway::Payroll
       params.each do |k,v|
         self.send("#{k}=", v)
       end
-
-      # @home_address ||= {}
+      
+      @bank_accounts ||= []
+      @super_memberships ||= []
+      @pay_template ||= {}
     end
 
     def build_home_address(params = {})
-      self.home_address = gateway ? gateway.build_payroll_employee_address(params) : Address.new(params)
+      self.home_address = gateway ? gateway.build_payroll_employee_address(params) : HomeAddress.new(params)
     end
     
     def home_address
       @home_address ||= build_home_address
     end
-
+    
     # Validate the Employee record according to what will be valid by the gateway.
     #
     # Usage:
     #  employee.valid?     # Returns true/false
     #
     #  Additionally sets employee.errors array to an array of field/error.
+    # TO DO : others fields validation
     def valid?
       @errors = []
 
@@ -55,6 +57,19 @@ module XeroGateway::Payroll
       if status && !EMPLOYEE_STATUS[status]
         @errors << ['status', "must be one of #{EMPLOYEE_STATUS.keys.join('/')}"]
       end
+      
+      if occupation && occupation.length > 50
+        @errors << ['occupation', "is too long (maximum is 50 characters)"]
+      end
+      
+      if mobile && mobile.length > 50
+        @errors << ['mobile', "is too long (maximum is 50 characters)"]
+      end 
+
+      if phone && phone.length > 50
+        @errors << ['phone', "is too long (maximum is 50 characters)"]
+      end
+            
       @errors.size == 0
     end
 
@@ -87,17 +102,23 @@ module XeroGateway::Payroll
         b.FirstName self.first_name if self.first_name
         b.DateOfBirth self.date_of_birth if self.date_of_birth
         b.Email self.email if self.email
-        b.FirstName self.first_name if self.first_name
         b.Gender self.gender if self.gender
         b.LastName self.last_name if self.last_name
         b.MiddleNames self.middle_name if self.middle_name
         b.TaxFileNumber self.tax_file_number if self.tax_file_number
         b.Title self.title if self.title
+        b.StartDate self.class.format_date(self.start_date || Date.today)
+        b.Occupation self.occupation if self.occupation
+        b.Mobile self.mobile if self.mobile
+        b.Phone self.phone if self.phone
+        b.TerminationDate self.termination_date if self.termination_date
+        b.BankAccounts self.bank_account unless self.bank_accounts.blank?
+        b.SuperMemberships self.bank_account unless self.bank_accounts.blank?
+        b.PayTemplate self.pay_template unless self.pay_template.blank?
         home_address.to_xml(b)
       }
     end
     
-    # Should add other fields based on Pivotal: 49575441
     def self.from_xml(employee_element, gateway = nil)
       employee = Employee.new
       employee_element.children.each do |element|
@@ -111,14 +132,23 @@ module XeroGateway::Payroll
           when "MiddleNames" then employee.middle_name = element.text
           when "TaxFileNumber" then employee.tax_file_number = element.text
           when "Title" then employee.title = element.text
-          when "HomeAddress" then employee.home_address = Address.from_xml(element)
+          when "StartDate" then employee.start_date =  parse_date_time(element.text)
+          when "Occupation" then employee.occupation = element.text
+          when "Mobile" then employee.mobile = element.text
+          when "Phone" then employee.phone = element.text
+          when "TerminationDate" then employee.termination_date = parse_date_time(element.text)
+          when "HomeAddress" then employee.home_address = HomeAddress.from_xml(element)
+          when "PayTemplate" then employee.pay_template = PayTemplate.from_xml(element)
+          when "BankAccounts" then element.children.each {|child| employee.bank_accounts << BankAccount.from_xml(child, gateway) }
+          when "SuperMemberships" then element.children.each {|child| employee.super_memberships << SuperMembership.from_xml(child, gateway) }
         end
       end
       employee
     end
 
     def ==(other)
-      [ :employee_id, :first_name, :date_of_birth, :email, :first_name, :gender, :last_name, :middle_name, :tax_file_number, :title, :home_address ].each do |field|
+      [ :employee_id, :first_name, :date_of_birth, :email, :gender, :last_name, :middle_name, :tax_file_number, 
+      :title, :start_date, :occupation, :mobile, :phone, :termination_date, :home_address, :bank_accounts ].each do |field|
         return false if send(field) != other.send(field)
       end
       return true

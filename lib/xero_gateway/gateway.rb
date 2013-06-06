@@ -211,7 +211,7 @@ module XeroGateway
     def build_payroll_employee(employee = {})
       case employee
         when Employee then   employee.gateway = self
-        when Hash then       employee = Employee.new(employee.merge({:gateway => self}))
+        when Hash then       employee = Payroll::Employee.new(employee.merge({:gateway => self}))
       end
       employee
     end
@@ -227,7 +227,7 @@ module XeroGateway
 
     def update_payroll_employees(employees)
       b = Builder::XmlMarkup.new
-      request_xml = b.Contacts {
+      request_xml = b.Employees {
         employees.each do | employee |
           employee.to_xml(b)
         end
@@ -235,7 +235,7 @@ module XeroGateway
 
       response_xml = http_post(@client, "#{@xero_payroll_url}/Employees", request_xml, {})
 
-      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'POST/employees'})
+      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'POST/employees'}, true)
       response.employees.each_with_index do | response_payroll_employee, index |
         employees[index].employee_id = response_payroll_employee.employee_id if response_employee && response_payroll_employee.employee_id
       end
@@ -245,9 +245,27 @@ module XeroGateway
     def build_payroll_employee_address(address = {})
       case address
         when Address then   address.gateway = self
-        when Hash then      address = Payroll::Address.new(address.merge({:gateway => self}))
+        when Hash then      address = Payroll::HomeAddress.new(address.merge({:gateway => self}))
       end
       address
+    end
+
+    def get_payroll_super_funds (options= {})
+      request_params = {}
+
+      request_params[:SuperFundId]   = options[:super_fund_id] if options[:super_fund_id]
+      request_params[:Order]       = options[:order] if options[:order]
+      request_params[:ModifiedAfter] = options[:modified_since] if options[:modified_since]
+      request_params[:where]         = options[:where] if options[:where]
+      request_params[:page]         = options[:where] if options[:page]
+
+      response_xml = http_get(@client, "#{@xero_payroll_url}/SuperFunds", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/superfunds'}, true)
+    end
+
+    def get_payroll_super_fund_by_id(super_fund_id)
+      get_payroll_super_fund(super_fund_id)
     end
 
     # Retrieves all invoices from Xero
@@ -690,6 +708,13 @@ module XeroGateway
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/employee'}, true)
     end
 
+    def get_payroll_super_fund(super_fund_id = nil)
+      request_params = { :SuperFundID => super_fund_id }
+      response_xml = http_get(@client, "#{@xero_payroll_url}/SuperFunds/#{URI.escape(super_fund_id)}", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/superfund'}, true)
+    end
+
     # Create or update a contact record based on if it has a contact_id or contact_number.
     def save_contact(contact)
       request_xml = contact.to_xml
@@ -746,7 +771,7 @@ module XeroGateway
         create_or_save = :save
       end
 
-      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => "#{create_or_save == :create ? 'PUT' : 'POST'}/employee"})
+      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => "#{create_or_save == :create ? 'PUT' : 'POST'}/employee"}, true)
       
       employee.employee_id = response.employee.employee_id if response.employee && response.employee.employee_id
       response
@@ -885,6 +910,7 @@ module XeroGateway
           when "Currencies" then element.children.each {|child| response.response_item << Currency.from_xml(child) }
           when "Organisations" then response.response_item = Organisation.from_xml(element.children.first) # Xero only returns the Authorized Organisation
           when "TrackingCategories" then element.children.each {|child| response.response_item << TrackingCategory.from_xml(child) }
+          when "SuperFunds" then element.children.each {|child| response.response_item << Payroll::SuperFund.from_xml(child, self) }
           when "Errors" then response.errors = element.children.map { |error| Error.parse(error) }
         end
       end if response_element

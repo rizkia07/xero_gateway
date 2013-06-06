@@ -12,13 +12,16 @@ gateway = XeroGateway::Gateway.new(XERO_KEYS["xero_consumer_key"], XERO_KEYS["xe
 %x(open #{gateway.request_token.authorize_url}"&scope=payroll.employees")
 
 puts "Enter the verification code from Xero?"
-oauth_verifier = gets.chomp  
+oauth_verifier = gets.chomp
 
 gateway.authorize_from_request(gateway.request_token.token, gateway.request_token.secret, :oauth_verifier => oauth_verifier)
 
-# Example payroll-API Call
-a = gateway.get_payroll_employees.employees
-pp a
-b =  gateway.get_payroll_employee_by_id(a.first.employee_id)
-pp b.employee
-pp b.employee.home_address.region
+# Example payroll-API calls
+payroll_employees = gateway.get_payroll_employees.employees.map(&:employee_id)
+
+pp payroll_employees
+
+# Retrieves Employee details and includes HomeAddress
+payroll_employee = gateway.get_payroll_employee_by_id(payroll_employees.first)
+pp payroll_employee.response_item
+pp payroll_employee.response_item.home_address.address_line1
