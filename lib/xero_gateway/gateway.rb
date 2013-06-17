@@ -4,7 +4,7 @@ module XeroGateway
     include Http
     include Dates
 
-    attr_accessor :client, :xero_url, :logger
+    attr_accessor :client, :xero_url, :logger, :xero_payroll_url
 
     extend Forwardable
     def_delegators :client, :request_token, :access_token, :authorize_from_request, :authorize_from_access, :expires_at, :authorization_expires_at
@@ -14,6 +14,7 @@ module XeroGateway
     # to you by Xero inside the API Previewer.
     def initialize(consumer_key, consumer_secret, options = {})
       @xero_url = options[:xero_url] || "https://api.xero.com/api.xro/2.0"
+      @xero_payroll_url = options[:xero_payroll_url] || "https://api.xero.com/payroll.xro/1.0"
       @client   = OAuth.new(consumer_key, consumer_secret, options)
     end
 
@@ -183,6 +184,88 @@ module XeroGateway
         employees[index].employee_id = response_employee.employee_id if response_employee && response_employee.employee_id
       end
       response
+    end
+
+    def get_payroll_employees(options= {})
+      request_params = {}
+
+      if !options[:updated_after].nil?
+        warn '[warning] :updated_after is depracated in XeroGateway#get_payroll_employees.  Use :modified_since'
+        options[:modified_since] = options.delete(:updated_after)
+      end
+
+      request_params[:EmployeeID]    = options[:employee_id] if options[:employee_id]
+      request_params[:OrderBy]       = options[:order] if options[:order]
+      request_params[:ModifiedAfter] = options[:modified_since] if options[:modified_since]
+      request_params[:where]         = options[:where] if options[:where]
+
+      response_xml = http_get(@client, "#{@xero_payroll_url}/Employees", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/employees'}, true)
+    end
+
+    def get_payroll_employee_by_id(employee_id)
+      get_payroll_employee(employee_id)
+    end
+
+    def build_payroll_employee(employee = {})
+      case employee
+        when Employee then   employee.gateway = self
+        when Hash then       employee = Payroll::Employee.new(employee.merge({:gateway => self}))
+      end
+      employee
+    end
+    
+    def create_payroll_employee(employee)
+      save_payroll_employee(employee)
+    end
+
+    def update_payroll_employee(employee)
+      raise "employee_id is required for updating payroll employees" if employee.employee_id.nil?
+      save_payroll_employee(employee)
+    end
+
+    def update_payroll_employees(employees)
+      b = Builder::XmlMarkup.new
+      request_xml = b.Employees {
+        employees.each do | employee |
+          employee.to_xml(b)
+        end
+      }
+
+      response_xml = http_post(@client, "#{@xero_payroll_url}/Employees", request_xml, {})
+
+      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'POST/employees'}, true)
+      response.employees.each_with_index do | response_payroll_employee, index |
+        employees[index].employee_id = response_payroll_employee.employee_id if response_employee && response_payroll_employee.employee_id
+      end
+      response
+    end
+
+    def build_payroll_employee_address(address = {})
+      case address
+        when Address then   address.gateway = self
+        when Hash then      address = Payroll::HomeAddress.new(address.merge({:gateway => self}))
+      end
+      address
+    end
+
+    def get_payroll_super_funds(options= {})
+      request_params = {}
+
+      request_params[:SuperFundId]   = options[:super_fund_id] if options[:super_fund_id]
+      request_params[:Order]       = options[:order] if options[:order]
+      request_params[:ModifiedAfter] = options[:modified_since] if options[:modified_since]
+      request_params[:where]         = options[:where] if options[:where]
+      request_params[:page]         = options[:where] if options[:page]
+
+      response_xml = http_get(@client, "#{@xero_payroll_url}/SuperFunds", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/superfunds'}, true)
+    end
+
+    def get_payroll_super_fund_by_id(super_fund_id)
+      get_payroll_super_fund(super_fund_id)
     end
 
     # Retrieves all invoices from Xero
@@ -618,6 +701,20 @@ module XeroGateway
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/employee'})
     end
 
+    def get_payroll_employee(employee_id = nil)
+      request_params = { :employeeID => employee_id }
+      response_xml = http_get(@client, "#{@xero_payroll_url}/Employees/#{URI.escape(employee_id)}", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/employee'}, true)
+    end
+
+    def get_payroll_super_fund(super_fund_id = nil)
+      request_params = { :SuperFundID => super_fund_id }
+      response_xml = http_get(@client, "#{@xero_payroll_url}/SuperFunds/#{URI.escape(super_fund_id)}", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/superfund'}, true)
+    end
+
     # Create or update a contact record based on if it has a contact_id or contact_number.
     def save_contact(contact)
       request_xml = contact.to_xml
@@ -655,6 +752,15 @@ module XeroGateway
       end
 
       response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => "#{create_or_save == :create ? 'PUT' : 'POST'}/employee"})
+      employee.employee_id = response.employee.employee_id if response.employee && response.employee.employee_id
+      response
+    end
+
+    def save_payroll_employee(employee)
+      request_xml = employee.to_xml     
+      response_xml = http_post(@client, "#{@xero_payroll_url}/Employees", request_xml, {})
+      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => "POST/employee"}, true)
+      
       employee.employee_id = response.employee.employee_id if response.employee && response.employee.employee_id
       response
     end
@@ -744,7 +850,7 @@ module XeroGateway
       response
     end
 
-    def parse_response(raw_response, request = {}, options = {})
+    def parse_response(raw_response, request = {}, options = {}, payroll_api = false)
 
       response = XeroGateway::Response.new
 
@@ -769,7 +875,14 @@ module XeroGateway
           when "ManualJournal"
             response.response_item = ManualJournal.from_xml(element, self, {:journal_lines_downloaded => options[:request_signature] != "GET/ManualJournals"})
           when "Contacts" then element.children.each {|child| response.response_item << Contact.from_xml(child, self) }
-          when "Employees" then element.children.each {|child| response.response_item << Employee.from_xml(child, self) }
+          when "Employees" 
+            then
+              if payroll_api
+                element.children.each {|child| response.response_item << Payroll::Employee.from_xml(child, self) }
+              else
+                element.children.each {|child| response.response_item << Employee.from_xml(child, self) }
+              end
+
           when "Invoices" then element.children.each {|child| response.response_item << Invoice.from_xml(child, self, {:line_items_downloaded => options[:request_signature] != "GET/Invoices"}) }
           when "BankTransactions"
             element.children.each do |child|
@@ -785,6 +898,7 @@ module XeroGateway
           when "Currencies" then element.children.each {|child| response.response_item << Currency.from_xml(child) }
           when "Organisations" then response.response_item = Organisation.from_xml(element.children.first) # Xero only returns the Authorized Organisation
           when "TrackingCategories" then element.children.each {|child| response.response_item << TrackingCategory.from_xml(child) }
+          when "SuperFunds" then element.children.each {|child| response.response_item << Payroll::SuperFund.from_xml(child, self) }
           when "Errors" then response.errors = element.children.map { |error| Error.parse(error) }
         end
       end if response_element

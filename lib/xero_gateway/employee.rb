@@ -15,7 +15,7 @@ module XeroGateway
     # Any errors that occurred when the #valid? method called.
     attr_reader :errors
 
-    attr_accessor :employee_id, :status, :first_name, :last_name, :email, :external_link, :email
+    attr_accessor :employee_id, :status, :first_name, :last_name, :email, :external_link
 
     def initialize(params = {})
       @errors ||= []
