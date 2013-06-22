@@ -1,7 +1,7 @@
 require "rubygems"
 
 require 'test/unit'
-require 'mocha/setup'
+require 'mocha'
 require 'shoulda'
 
 require 'libxml'

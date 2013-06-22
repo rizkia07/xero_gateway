@@ -48,5 +48,4 @@ module XeroGateway
   class BankTransactionNotFoundError < StandardError; end
   class CreditNoteNotFoundError < StandardError; end
   class ManualJournalNotFoundError < StandardError; end
-  class EmployeeNotFoundError < StandardError;end
 end
