@@ -1,7 +1,7 @@
 require "rubygems"
 
 require 'test/unit'
-require 'mocha'
+require 'mocha/setup'
 require 'shoulda'
 
 require 'libxml'
@@ -112,7 +112,6 @@ module TestHelper
       :email => STUB_XERO_CALLS ? "user@xero.com" : "user_#{unique_id}@xero.com",
       :gender => "M",
       :middle_name => STUB_XERO_CALLS ? "EMPLOYEE MIDDLE NAME" : "THE MIDDLE NAME OF THE EMPLOYEE #{unique_id}",
-      :tax_file_number => 123123123,
       :title => "Mr"
     })
 
