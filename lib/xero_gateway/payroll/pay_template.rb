@@ -8,7 +8,7 @@ module XeroGateway::Payroll
     # Any errors that occurred when the #valid? method called.
     attr_reader :errors
     
-    attr_accessor :earnings_lines
+    attr_accessor :earnings_lines, :leave_lines
     
      def initialize(params = {})
       @errors ||= []
@@ -19,11 +19,13 @@ module XeroGateway::Payroll
       end
 
       @earnings_lines ||= []
+      @leave_lines ||= []
     end
     
     def to_xml(b = Builder::XmlMarkup.new)
       b.PayTemplate {
       	b.EarningsLines self.earnings_lines if self.earnings_lines
+        b.LeaveLines self.leave_lines if self.leave_lines
       }
     end
     
@@ -32,13 +34,14 @@ module XeroGateway::Payroll
       pay_template_element.children.each do |element|
         case(element.name)
           when "EarningsLines" then element.children.each {|child| pay_template.earnings_lines << EarningsLine.from_xml(child, gateway) }
+          when "LeaveLine" then element.children.each {|child| pay_template.leave_lines << LeaveLine.from_xml(child, gateway) }
         end
       end
       pay_template
     end
 
     def ==(other)
-      [ :earnings_lines ].each do |field|
+      [ :earnings_lines, :leave_lines ].each do |field|
         return false if send(field) != other.send(field)
       end
       return true

@@ -268,6 +268,26 @@ module XeroGateway
       get_payroll_super_fund(super_fund_id)
     end
 
+    def get_payroll_leave_applications(options={})
+      request_params = {}
+
+      request_params[:EmployeeID]    = options[:employee_id] if options[:employee_id]
+      #request_params[:LeaveTypeID]   = options[:leave_type_id] if options[:leave_type_id]
+      request_params[:Order]         = options[:order] if options[:order]
+      request_params[:ModifiedAfter] = options[:modified_since] if options[:modified_since]
+      request_params[:where]         = options[:where] if options[:where]
+      request_params[:page]          = options[:where] if options[:page]
+
+      response_xml = http_get(@client, "#{@xero_payroll_url}/LeaveApplications", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/leavepplications'}, true)
+    end
+
+    def get_payroll_leave_application_by_id(employee_id)
+      get_payroll_leave_application(employee_id)
+    end
+
+
     # Retrieves all invoices from Xero
     #
     # Usage : get_invoices
@@ -715,6 +735,13 @@ module XeroGateway
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/superfund'}, true)
     end
 
+    def get_payroll_leave_application(employee_id = nil)
+      request_params = { :LeaveTypeID => employee_id }
+      response_xml   = http_get(@client, "#{@xero_payroll_url}/LeaveApplications/#{URI.escape(employee_id)}", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/leavepplication'})
+    end
+
     # Create or update a contact record based on if it has a contact_id or contact_number.
     def save_contact(contact)
       request_xml = contact.to_xml
@@ -894,7 +921,6 @@ module XeroGateway
               else
                 element.children.each {|child| response.response_item << Employee.from_xml(child, self) }
               end
-
           when "Invoices" then element.children.each {|child| response.response_item << Invoice.from_xml(child, self, {:line_items_downloaded => options[:request_signature] != "GET/Invoices"}) }
           when "BankTransactions"
             element.children.each do |child|
@@ -911,6 +937,7 @@ module XeroGateway
           when "Organisations" then response.response_item = Organisation.from_xml(element.children.first) # Xero only returns the Authorized Organisation
           when "TrackingCategories" then element.children.each {|child| response.response_item << TrackingCategory.from_xml(child) }
           when "SuperFunds" then element.children.each {|child| response.response_item << Payroll::SuperFund.from_xml(child, self) }
+          when "LeaveApplications" then element.children.each {|child| response.response_item << Payroll::LeaveApplication.from_xml(child, self)}
           when "Errors" then response.errors = element.children.map { |error| Error.parse(error) }
         end
       end if response_element

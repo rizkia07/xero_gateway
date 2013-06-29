@@ -10,7 +10,7 @@ module XeroGateway::Payroll
     
     attr_accessor :number_of_units_per_week, :annual_salary, :rate_per_unit, :normal_number_of_units
     
-     def initialize(params = {})
+    def initialize(params = {})
       @errors ||= []
 
       params = {}.merge(params)
