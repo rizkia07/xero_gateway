@@ -237,9 +237,18 @@ module XeroGateway
 
       response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'POST/employees'}, true)
       response.employees.each_with_index do | response_payroll_employee, index |
-        employees[index].employee_id = response_payroll_employee.employee_id if response_employee && response_payroll_employee.employee_id
+        employees[index].employee_id = response_payroll_employee.employee_id if response_payroll_employee && response_payroll_employee.employee_id
       end
       response
+    end
+    
+    def create_leave_application(leave_application)
+      save_payroll_leave_application(leave_application)
+    end
+
+    def update_leave_application(leave_application)
+      raise "leave_application_id is required for updating payroll employees" if leave_application.leave_application_id.nil?
+      save_payroll_leave_application(leave_application)
     end
 
     def build_payroll_employee_address(address = {})
@@ -250,7 +259,7 @@ module XeroGateway
       address
     end
 
-    def get_payroll_super_funds (options= {})
+    def get_payroll_super_funds(options= {})
       request_params = {}
 
       request_params[:SuperFundId]   = options[:super_fund_id] if options[:super_fund_id]
@@ -704,6 +713,12 @@ module XeroGateway
       response_xml = http_put(@client, "#{xero_url}/Payments", request_xml)
       parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'PUT/payments'})
     end
+    
+    def get_pay_items
+      response_xml = http_get(@client, "#{@xero_payroll_url}/PayItems",{})
+
+      parse_response(response_xml, {:request_params => {}}, {:request_signature => 'GET/pay_items'}, true)
+    end 
 
     private
 
@@ -785,23 +800,26 @@ module XeroGateway
 
     def save_payroll_employee(employee)
       request_xml = employee.to_xml
+      response_xml = http_post(@client, "#{@xero_payroll_url}/Employees", request_xml, {})
+      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => "POST/employee"}, true)
 
-      response_xml = nil
-      create_or_save = nil
-      if employee.employee_id.nil?
-        # Create new contact record.
-        response_xml = http_put(@client, "#{@xero_payroll_url}/Employees", request_xml, {})
-        create_or_save = :create
-      else
-        # Update existing contact record.
-        response_xml = http_post(@client, "#{@xero_payroll_url}/Employees", request_xml, {})
-        create_or_save = :save
-      end
-
-      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => "#{create_or_save == :create ? 'PUT' : 'POST'}/employee"}, true)
-      
       employee.employee_id = response.employee.employee_id if response.employee && response.employee.employee_id
       response
+    end
+    
+    def save_payroll_leave_application(leave_application)
+      request_xml = leave_application.to_xml
+      response_xml = nil
+      create_or_save = nil
+
+      response_xml = http_post(@client, "#{@xero_payroll_url}/LeaveApplications", request_xml, {})
+      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => "POST/leaveapplications"}, true)
+
+      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => "#{create_or_save == :create ? 'PUT' : 'POST'}/LeaveApplications"}, true)
+      
+      leave_application.leave_application_id = response.leave_application.leave_application_id if response.leave_application && response.leave_application.leave_application_id
+      response
+
     end
 
     # Create or update an invoice record based on if it has an invoice_id.
@@ -938,6 +956,7 @@ module XeroGateway
           when "TrackingCategories" then element.children.each {|child| response.response_item << TrackingCategory.from_xml(child) }
           when "SuperFunds" then element.children.each {|child| response.response_item << Payroll::SuperFund.from_xml(child, self) }
           when "LeaveApplications" then element.children.each {|child| response.response_item << Payroll::LeaveApplication.from_xml(child, self)}
+          when "PayItems" then response.response_item = Payroll::PayItem.from_xml(element, self)
           when "Errors" then response.errors = element.children.map { |error| Error.parse(error) }
         end
       end if response_element
