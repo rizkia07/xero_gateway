@@ -59,11 +59,11 @@ module XeroGateway::Payroll
 
     def to_xml(b = Builder::XmlMarkup.new)
       b.LeaveApplication {
-      	b.EmployeeID self.employee_id if self.employee_id
-      	b.LeaveTypeID self.leave_type_id if self.leave_type_id
-      	b.Title self.title if self.title
-      	b.StartDate self.start_date.strftime("%Y-%m-%dT%H:%M:%S") if self.start_date
-      	b.EndDate self.end_date.strftime("%Y-%m-%dT%H:%M:%S") if self.start_date
+        b.EmployeeID self.employee_id if self.employee_id
+        b.LeaveTypeID self.leave_type_id if self.leave_type_id
+        b.Title self.title if self.title
+        b.StartDate self.start_date.strftime("%Y-%m-%dT%H:%M:%S") if self.start_date
+        b.EndDate self.end_date.strftime("%Y-%m-%dT%H:%M:%S") if self.start_date
         b.Description self.description if self.description
         b.LeavePeriods{
           self.leave_periods.each do |leave_period|
@@ -96,54 +96,6 @@ module XeroGateway::Payroll
         return false if send(field) != other.send(field)
       end
       return true
-    end
-  end
-end
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def to_xml(b = Builder::XmlMarkup.new)
-      b.LeavePeriod {
-      	b.NumberOfUnits self.number_of_units if self.number_of_units
-      	b.PayPeriodEndDate self.class.format_date(self.pay_period_end_date) if self.pay_period_end_date
-      	b.PayPeriodStartDate self.class.format_date(self.pay_period_start_date) if self.pay_period_start_date
-      	b.LeavePeriodStatus self.leave_period_status if self.leave_period_status
-      }
-    end 
-    
-    def self.from_xml(leave_period_element, gateway = nil)
-      leave_period = LeavePeriod.new
-      leave_period_element.child.each do |element|
-      case(element.name)
-        when "NumberOfUnits" then leave_period.number_of_units = element.text
-        when "PayPeriodEndDate" then leave_period.pay_period_end_date = parse_date(element.text)
-        when "PayPeriodStartDate" then leave_period.pay_period_start_date = parse_date(element.text)
-        when "LeavePeriodStatus" then leave_period.leave_period_status = element.text
-      end
-      leave_period  
-    end 
-    
-    def ==(other)
-      [ :number_of_units, :pay_period_end_date, :pay_period_start_date, :leave_period_status].each do |field|
-        return false if send(field) != other.send(field)
-      end
-      return true
-    end
     end
   end
 end
