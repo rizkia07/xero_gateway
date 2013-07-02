@@ -15,7 +15,7 @@ class GetPayrollEmployeesTest < Test::Unit::TestCase
       @gateway.stubs(:http_put).with {|client, url, body, params| url =~ /Employees$/ }.returns(get_file_as_string("payroll_employee.xml"))
       @gateway.stubs(:http_post).with {|client, url, body, params| url =~ /Employees$/ }.returns(get_file_as_string("payroll_employee.xml"))
 
-      # Get a bank transaction with an invalid ID. 
+      # Get a bank transaction with an invalid ID.
       @gateway.stubs(:http_get).with {|client, url, params| url =~ Regexp.new("BankTransactions/#{INVALID_PAYROLL_EMPLOYEE_ID}") }.returns(get_file_as_string("payroll_employee_not_found_error.xml"))
     end
   end

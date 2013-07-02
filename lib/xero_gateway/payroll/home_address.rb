@@ -4,10 +4,6 @@ module XeroGateway::Payroll
 
     GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/ unless defined?(GUID_REGEX)
 
-    STATE_ABBREVIATIONS = [
-      "ACT", "NSW", "NT", "QLD","SA", "TAS", "VIC", "WA"
-    ]unless defined?(STATE_ABBREVIATIO)
-
     # Xero::Gateway associated with this employee.
     attr_accessor :gateway
 
@@ -25,28 +21,6 @@ module XeroGateway::Payroll
       end
     end
 
-    def valid?
-      @errors = []
-
-      if address_line1.blank?
-        @errors << ['address_line1', 'must be blank']
-      end
-
-      if city.blank?
-        @errors << ['city', 'must be blank']
-      end
-
-      if postal_code.blank?
-        @errors << ['postal_code', 'must be blank']
-      end
-
-      if !region.blank? && !STATE_ABBREVIATIONS.include?(region)
-        @errors << ['region', "must be blank or a valid state abbreviation"]
-      end
-
-      @errors.size == 0
-    end
-
     def to_xml(b = Builder::XmlMarkup.new)
       b.HomeAddress {
       	b.AddressLine1 self.address_line1 if self.address_line1
@@ -59,7 +33,7 @@ module XeroGateway::Payroll
         b.Country self.country if self.country
       }
     end
-
+    
     # Should add other fields based on Pivotal: 49575441
     def self.from_xml(address_element, gateway = nil)
       address = HomeAddress.new
