@@ -26,18 +26,22 @@ leave_types = pay_items.leave_types
 pp leave_types
 
 # Get first employee
+puts "========= employees"
 employees = gateway.get_payroll_employees.response_item
+pp employees.inspect
 
 # Get LeaveApplications
+puts "========= get leave_applications"
 leave_applications = gateway.get_payroll_leave_applications.response_item
 pp leave_applications.inspect
 
 #Create New LeaveApplication
+puts "======== create new_leave_application"
 new_leave_application = XeroGateway::Payroll::LeaveApplication.new
 new_leave_application.gateway = gateway
 new_leave_application.leave_type_id = leave_types.first.leave_type_id
 new_leave_application.employee_id = employees[1].employee_id
-new_leave_application.title = "My leave_application"
+new_leave_application.title = "My  for FIRST employee"
 new_leave_application.start_date = Date.today
 new_leave_application.end_date = Date.today + 1.week
 new_leave_application.description = "My Description"
@@ -54,4 +58,6 @@ new_leave_application.leave_periods = [
 #response = new_leave_application.create 
 #pp response.inspect
 
-
+the_leave_application = gateway.get_payroll_leave_application_by_id(employees[1].employee_id)
+puts "============ leave_application by id"
+pp the_leave_application.inspect
