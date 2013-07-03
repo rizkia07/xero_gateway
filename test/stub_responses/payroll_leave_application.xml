@@ -1,0 +1,21 @@
+<Response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <LeaveApplications>
+    <LeaveApplication>
+      <LeaveApplicationID>aa40b7e8-b964-43d9-9ebe-0ba81583cea3</LeaveApplicationID>
+      <EmployeeID>9157d509-4d61-46f1-bb6c-f3c68c308a48</EmployeeID>
+      <LeaveTypeID>07ca6967-03f6-4c04-9a99-999b1e424e86</LeaveTypeID>
+      <LeavePeriods>
+        <LeavePeriod>
+          <PayPeriodStartDate>2013-04-29T00:00:00</PayPeriodStartDate>
+          <PayPeriodEndDate>2013-05-12T00:00:00</PayPeriodEndDate>
+          <LeavePeriodStatus>SCHEDULED</LeavePeriodStatus>
+          <NumberOfUnits>22.8000</NumberOfUnits>
+        </LeavePeriod>
+      </LeavePeriods>
+      <Title>My single leave_application</Title>
+      <StartDate>2013-05-08T00:00:00</StartDate>
+      <EndDate>2013-05-10T00:00:00</EndDate>
+      <UpdatedDateUTC>2013-04-01T23:02:36</UpdatedDateUTC>
+    </LeaveApplication>    
+  </LeaveApplications>
+</Response>
