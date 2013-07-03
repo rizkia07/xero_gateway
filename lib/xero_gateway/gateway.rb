@@ -752,9 +752,9 @@ module XeroGateway
 
     def get_payroll_leave_application(employee_id = nil)
       request_params = { :employeeID => employee_id }
-      response_xml   = http_get(@client, "#{@xero_payroll_url}/LeaveApplications/", request_params)
+      response_xml   = http_get(@client, "#{@xero_payroll_url}/LeaveApplications/#{URI.escape(employee_id)}", request_params)
 
-      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/leavepplication'})
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/leavepplication'}, true)
     end
 
     # Create or update a contact record based on if it has a contact_id or contact_number.
