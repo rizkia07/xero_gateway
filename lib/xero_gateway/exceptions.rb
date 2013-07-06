@@ -49,4 +49,5 @@ module XeroGateway
   class CreditNoteNotFoundError < StandardError; end
   class ManualJournalNotFoundError < StandardError; end
   class EmployeeNotFoundError < StandardError;end
+  class TimesheetNotFoundError < StandardError;end
 end

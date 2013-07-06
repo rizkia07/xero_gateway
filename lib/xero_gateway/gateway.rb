@@ -296,6 +296,24 @@ module XeroGateway
       get_payroll_leave_application(employee_id)
     end
 
+    def get_payroll_timesheets(options={})
+      request_params = {}
+
+      request_params[:EmployeeID]    = options[:employee_id] if options[:employee_id]
+      request_params[:Order]         = options[:order] if options[:order]
+      request_params[:ModifiedAfter] = options[:modified_since] if options[:modified_since]
+      request_params[:where]         = options[:where] if options[:where]
+      request_params[:page]          = options[:where] if options[:page]
+
+      response_xml = http_get(@client, "#{@xero_payroll_url}/Timesheets", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/Timesheets'}, true)
+    end
+
+     def get_payroll_timesheet_by_employee_id(employee_id)
+      get_payroll_timesheet(employee_id)
+    end
+
 
     # Retrieves all invoices from Xero
     #
@@ -757,6 +775,13 @@ module XeroGateway
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/leavepplication'}, true)
     end
 
+    def get_payroll_timesheet(employee_id = nil)
+      request_params = { :employeeID => employee_id }
+      response_xml   = http_get(@client, "#{@xero_payroll_url}/Timesheets/", request_params)
+
+      parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/timesheet'}, true)
+    end
+
     # Create or update a contact record based on if it has a contact_id or contact_number.
     def save_contact(contact)
       request_xml = contact.to_xml
@@ -957,6 +982,7 @@ module XeroGateway
           when "SuperFunds" then element.children.each {|child| response.response_item << Payroll::SuperFund.from_xml(child, self) }
           when "LeaveApplications" then element.children.each {|child| response.response_item << Payroll::LeaveApplication.from_xml(child, self)}
           when "PayItems" then response.response_item = Payroll::PayItem.from_xml(element, self)
+          #when "Timesheets" then element.children.each {|child| response.response_item << Payroll::Timesheet.from_xml(child, self)}
           when "Errors" then response.errors = element.children.map { |error| Error.parse(error) }
         end
       end if response_element
