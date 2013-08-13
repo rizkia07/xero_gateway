@@ -18,7 +18,11 @@ module XeroGateway
         "FinancialYearEndMonth" => :string,
         "PeriodLockDate"        => :string,
         "CreatedDateUTC"        => :string,
-        "Addresses"             => :array
+        "Addresses"             => :array,
+        "EndOfYearLockDate"     => :string,
+        "RegistrationNumber"    => :string,
+        "ShortCode"             => :string,
+        "ExternalLinks"         => :array
       }
     end
     
