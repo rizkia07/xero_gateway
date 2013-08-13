@@ -36,8 +36,8 @@ module XeroGateway::Payroll
     def to_xml(b = Builder::XmlMarkup.new)
       b.LeavePeriod {
       	b.NumberOfUnits self.number_of_units if self.number_of_units
-      	b.PayPeriodEndDate self.pay_period_end_date.strftime("%Y-%m-%dT%H:%M:%S") if self.pay_period_end_date
-      	b.PayPeriodStartDate self.pay_period_start_date.strftime("%Y-%m-%dT%H:%M:%S") if self.pay_period_start_date
+      	b.PayPeriodEndDate self.class.format_date(self.pay_period_end_date || Date.today) if self.pay_period_end_date
+      	b.PayPeriodStartDate self.class.format_date(self.pay_period_start_date || Date.today) if self.pay_period_start_date
       	b.LeavePeriodStatus self.leave_period_status if self.leave_period_status
       }
     end 

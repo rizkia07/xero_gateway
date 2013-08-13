@@ -18,7 +18,7 @@ module XeroGateway::Payroll
         self.send("#{k}=", v)
       end
 
-      @earnings_lines ||= []    
+      @earnings_lines ||= []
     end
 
     def to_xml(b = Builder::XmlMarkup.new)
