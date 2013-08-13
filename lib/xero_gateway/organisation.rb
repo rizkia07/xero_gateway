@@ -17,7 +17,8 @@ module XeroGateway
         "FinancialYearEndDay"   => :string,
         "FinancialYearEndMonth" => :string,
         "PeriodLockDate"        => :string,
-        "CreatedDateUTC"        => :string        
+        "CreatedDateUTC"        => :string,
+        "Addresses"             => :array
       }
     end
     
@@ -27,6 +28,8 @@ module XeroGateway
       params.each do |k,v|
         self.send("#{k}=", v)
       end
+      
+      @addresses ||= []
     end
     
     def ==(other)
@@ -41,7 +44,8 @@ module XeroGateway
       
       b.Organisation do
         ATTRS.keys.each do |attr|
-          eval("b.#{attr} '#{self.send(attr.underscore.to_sym)}'")
+          ATTRS[attr] == :array ? (eval("b.#{attr}{self.attributes_contains_array_to_xml(attr, b)}")) : 
+            eval("b.#{attr} '#{self.send(attr.underscore.to_sym)}'")
         end
       end
     end
@@ -58,6 +62,7 @@ module XeroGateway
             case (ATTRS[attribute])
               when :boolean then  org.send("#{underscored_attribute}=", (element.text == "true"))
               when :float   then  org.send("#{underscored_attribute}=", element.text.to_f)
+              when :array   then  org.attributes_contains_array_from_xml(attribute, element)
               else                org.send("#{underscored_attribute}=", element.text)
             end
             
@@ -71,5 +76,18 @@ module XeroGateway
       end
     end
     
+    def attributes_contains_array_from_xml(name, element)
+      case name
+        when "Addresses" then element.children.each {|address_element| self.addresses << Address.from_xml(address_element)}
+        else warn "Ignoring unknown attribute: #{name}" 
+      end 
+    end 
+    
+    def attributes_contains_array_to_xml(name, xml_builder)
+      case name
+        when "Addresses" then addresses.each { |address| address.to_xml(xml_builder) }
+        else warn "Ignoring unknown attribute: #{name}" 
+      end 
+    end 
   end
 end

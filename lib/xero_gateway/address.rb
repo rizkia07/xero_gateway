@@ -9,7 +9,7 @@ module XeroGateway
     # Any errors that occurred when the #valid? method called.
     attr_reader :errors
     
-    attr_accessor :address_type, :line_1, :line_2, :line_3, :line_4, :city, :region, :post_code, :country
+    attr_accessor :address_type, :line_1, :line_2, :line_3, :line_4, :city, :region, :post_code, :country, :attention_to
     
     def initialize(params = {})
       @errors ||= []
@@ -50,6 +50,7 @@ module XeroGateway
         b.Region region if region
         b.PostalCode post_code if post_code
         b.Country country if country
+        b.AttentionTo if attention_to
       }
     end
     
@@ -66,6 +67,7 @@ module XeroGateway
           when "Region" then address.region = element.text
           when "PostalCode" then address.post_code = element.text
           when "Country" then address.country = element.text
+          when "AttentionTo" then address.attention_to = element.text
         end
       end
       address
@@ -87,7 +89,7 @@ module XeroGateway
     end
     
     def ==(other)
-      [:address_type, :line_1, :line_2, :line_3, :line_4, :city, :region, :post_code, :country].each do |field|
+      [:address_type, :line_1, :line_2, :line_3, :line_4, :city, :region, :post_code, :country, :attention_to].each do |field|
         return false if send(field) != other.send(field)
       end
       return true
