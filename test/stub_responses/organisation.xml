@@ -1,18 +1,85 @@
 <Response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Id>e3431899-bf76-41e8-a919-4c8c923feb12</Id>
   <Status>OK</Status>
+  <ProviderName>Xero API Previewer</ProviderName>
   <DateTimeUTC>2009-10-04T03:26:26.6994434Z</DateTimeUTC>
   <Organisations>
     <Organisation>
+      <APIKey>RWCH8BOD0E5EN9DNDKR68BW8KIUYTR</APIKey>
       <Name>Demo Company (NZ)</Name>
       <LegalName>Demo Company (NZ)</LegalName>
       <PaysTax>true</PaysTax>
       <Version>NZ</Version>
-      <CountryCode>NZ</CountryCode>
       <OrganisationType>COMPANY</OrganisationType>
-      <OrganisationStatus>ACTIVE</OrganisationStatus>
       <BaseCurrency>NZD</BaseCurrency>
+      <CountryCode>NZ</CountryCode>
       <IsDemoCompany>false</IsDemoCompany>
+      <OrganisationStatus>ACTIVE</OrganisationStatus>
+      <RegistrationNumber>56196384085</RegistrationNumber>
+      <FinancialYearEndDay>30</FinancialYearEndDay>
+      <FinancialYearEndMonth>6</FinancialYearEndMonth>
+      <PeriodLockDate>2013-03-31T00:00:00</PeriodLockDate>
+      <CreatedDateUTC>2013-04-23T03:05:10</CreatedDateUTC>
+      <OrganisationEntityType>COMPANY</OrganisationEntityType>
+      <Timezone>AUSEASTERNSTANDARDTIME</Timezone>
+      <ShortCode>!lMYrg</ShortCode>
+      <Addresses>
+        <Address>
+          <AddressType>STREET</AddressType>
+          <AddressLine1>8/121 Walker St</AddressLine1>
+          <City>North Sydney</City>
+          <Region>NSW</Region>
+          <PostalCode>2060</PostalCode>
+          <Country>Australia</Country>
+        </Address>
+        <Address>
+          <AddressType>POBOX</AddressType>
+          <AddressLine1>8/121 Walker St</AddressLine1>
+          <City>North Sydney</City>
+          <Region>NSW</Region>
+          <PostalCode>2060</PostalCode>
+          <Country>Australia</Country>
+        </Address>
+      </Addresses>
+      <Phones>
+        <Phone>
+          <PhoneType>MOBILE</PhoneType>
+        </Phone>
+        <Phone>
+          <PhoneType>DDI</PhoneType>
+        </Phone>
+        <Phone>
+          <PhoneType>DEFAULT</PhoneType>
+          <PhoneNumber>1234</PhoneNumber>
+          <PhoneAreaCode>9698</PhoneAreaCode>
+          <PhoneCountryCode>02</PhoneCountryCode>
+        </Phone>
+        <Phone>
+          <PhoneType>FAX</PhoneType>
+        </Phone>
+      </Phones>
+      <ExternalLinks>
+        <ExternalLink>
+          <LinkType>Facebook</LinkType>
+          <Url>http://facebook.com/</Url>
+        </ExternalLink>
+        <ExternalLink>
+          <LinkType>Twitter</LinkType>
+          <Url>http://twitter.com/</Url>
+        </ExternalLink>
+        <ExternalLink>
+          <LinkType>GooglePlus</LinkType>
+          <Url>http://plus.google.com/</Url>
+        </ExternalLink>
+        <ExternalLink>
+          <LinkType>LinkedIn</LinkType>
+          <Url>http://linkedin.com/</Url>
+        </ExternalLink>
+        <ExternalLink>
+          <LinkType>None</LinkType>
+          <Url>http:///</Url>
+        </ExternalLink>
+      </ExternalLinks>      
     </Organisation>
   </Organisations>
 </Response>
