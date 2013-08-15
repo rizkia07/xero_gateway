@@ -20,5 +20,12 @@ class GetOrganisationTest < Test::Unit::TestCase
     
     assert_equal XeroGateway::Organisation, result.organisation.class
     assert_equal "Demo Company (NZ)", result.organisation.name
+    assert_equal "Demo Company (NZ)", result.organisation.legal_name
+    assert result.organisation.pays_tax
+    assert_equal "NZ", result.organisation.version
+    assert_equal "COMPANY", result.organisation.organisation_type
+    assert_equal 2, result.organisation.addresses.length
+    assert_equal 4, result.organisation.phones.length
+    assert_equal 5, result.organisation.external_links.length
   end
 end
